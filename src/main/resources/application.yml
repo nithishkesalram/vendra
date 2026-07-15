@@ -1,0 +1,111 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: procure-ai
+  datasource:
+    url: jdbc:h2:mem:procureaidb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+  data:
+    redis:
+      repositories:
+        enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  cache:
+    type: simple
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: procure-ai
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: com.procureai.*
+    producer:
+      properties:
+        spring.json.add.type.headers: false
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+management:
+  health:
+    redis:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+procureai:
+  jwt:
+    secret: ${PROCUREAI_JWT_SECRET:local-demo-secret-key-change-before-production-12345}
+    access-token-minutes: 15
+    refresh-token-days: 7
+  ai:
+    chat-rate-limit-per-minute: 20
+  kafka:
+    enabled: false
+    topics:
+      po-created: po.created
+      po-approved: po.approved
+      po-rejected: po.rejected
+      document-uploaded: document.uploaded
+      vendor-risk-flagged: vendor.risk.flagged
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: jdbc:postgresql://postgres:5432/procureai
+    driver-class-name: org.postgresql.Driver
+    username: procureai
+    password: procureai
+  cache:
+    type: redis
+  data:
+    redis:
+      host: redis
+      port: 6379
+  kafka:
+    bootstrap-servers: kafka:29092
+
+procureai:
+  kafka:
+    enabled: true
+
+management:
+  health:
+    redis:
+      enabled: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    url: jdbc:h2:mem:procureaitest;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  cache:
+    type: simple
+
+procureai:
+  kafka:
+    enabled: false
