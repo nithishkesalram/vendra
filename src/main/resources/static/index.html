@@ -1,0 +1,943 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#112d2d">
+    <title>Procure AI | Procurement Command Center</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.min.js" defer></script>
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
+    <style>
+        :root {
+            --ink: #17302d;
+            --ink-soft: #3f5c57;
+            --muted: #71837f;
+            --line: #dbe5e2;
+            --line-strong: #cbd9d5;
+            --canvas: #f4f7f5;
+            --paper: #ffffff;
+            --aqua: #0f8078;
+            --aqua-dark: #0b625c;
+            --aqua-faint: #e2f3ef;
+            --lime: #6e9f34;
+            --lime-faint: #edf6df;
+            --orange: #ca6b2f;
+            --orange-faint: #fff0e5;
+            --red: #ba4e4e;
+            --red-faint: #fceaea;
+            --night: #112d2d;
+            --night-deep: #0b2323;
+            --shadow: 0 14px 40px rgba(20, 53, 49, 0.08);
+        }
+
+        * { box-sizing: border-box; }
+
+        html { background: var(--canvas); }
+
+        body {
+            margin: 0;
+            min-width: 320px;
+            color: var(--ink);
+            background: var(--canvas);
+            font-family: Manrope, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        button, input, select, textarea { font: inherit; }
+        button { cursor: pointer; }
+        button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible {
+            outline: 3px solid rgba(15, 128, 120, 0.25);
+            outline-offset: 2px;
+        }
+
+        .app-shell { min-height: 100vh; }
+
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            width: 240px;
+            padding: 22px 14px 16px;
+            color: #d7e8e4;
+            background: var(--night);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 0 10px 26px;
+            color: #fff;
+            font-weight: 800;
+            letter-spacing: 0;
+        }
+
+        .brand-mark {
+            display: grid;
+            width: 34px;
+            height: 34px;
+            place-items: center;
+            color: var(--night);
+            background: #bce6d6;
+            border-radius: 7px;
+            font-family: "DM Mono", monospace;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .brand small {
+            display: block;
+            margin-top: 1px;
+            color: #8eb0aa;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .nav-label {
+            padding: 0 10px 8px;
+            color: #7e9d98;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        .nav-list { display: grid; gap: 3px; }
+
+        .nav-button,
+        .user-button {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: 11px;
+            min-height: 42px;
+            padding: 0 10px;
+            border: 0;
+            border-radius: 6px;
+            color: #bdd2ce;
+            background: transparent;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .nav-button:hover, .nav-button.active { color: #fff; background: rgba(206, 245, 231, 0.13); }
+        .nav-button svg, .user-button svg { width: 17px; height: 17px; stroke-width: 1.8; }
+        .nav-button .nav-count { margin-left: auto; color: #89aba4; font-family: "DM Mono", monospace; font-size: 11px; }
+        .nav-button.active .nav-count { color: #c8eee0; }
+
+        .sidebar-spacer { flex: 1; }
+
+        .sidebar-action {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: 42px;
+            gap: 8px;
+            border: 1px solid rgba(188, 230, 214, 0.38);
+            border-radius: 6px;
+            color: #e8fff7;
+            background: rgba(188, 230, 214, 0.08);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .sidebar-action:hover { background: rgba(188, 230, 214, 0.17); }
+        .sidebar-action svg { width: 16px; height: 16px; }
+
+        .sidebar-footer { padding: 15px 0 0; }
+        .user-button { min-height: 48px; padding: 5px 8px; }
+        .user-button:hover { background: rgba(255, 255, 255, 0.07); }
+        .user-avatar {
+            display: grid;
+            flex: 0 0 auto;
+            width: 30px;
+            height: 30px;
+            place-items: center;
+            border-radius: 50%;
+            color: var(--night);
+            background: #dd9e70;
+            font-size: 11px;
+            font-weight: 800;
+        }
+        .user-meta { min-width: 0; }
+        .user-meta strong, .user-meta span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .user-meta strong { color: #eff9f5; font-size: 12px; }
+        .user-meta span { color: #86a8a1; font-size: 10px; }
+
+        .workspace { margin-left: 240px; padding: 0 34px 38px; }
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 82px;
+            gap: 18px;
+            border-bottom: 1px solid var(--line);
+        }
+        .crumb { color: var(--muted); font-size: 12px; font-weight: 600; }
+        .crumb strong { color: var(--ink); font-weight: 800; }
+        .top-actions { display: flex; align-items: center; gap: 8px; }
+        .icon-button {
+            display: inline-grid;
+            width: 38px;
+            height: 38px;
+            place-items: center;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            color: var(--ink-soft);
+            background: var(--paper);
+        }
+        .icon-button:hover { border-color: var(--aqua); color: var(--aqua); }
+        .icon-button svg { width: 17px; height: 17px; }
+        .connect-button, .primary-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            gap: 8px;
+            padding: 0 13px;
+            border: 1px solid var(--aqua);
+            border-radius: 6px;
+            color: #fff;
+            background: var(--aqua);
+            font-size: 12px;
+            font-weight: 800;
+        }
+        .connect-button:hover, .primary-button:hover { background: var(--aqua-dark); border-color: var(--aqua-dark); }
+        .connect-button svg, .primary-button svg { width: 15px; height: 15px; }
+
+        .page-head {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 29px 0 20px;
+        }
+        h1 { margin: 0; color: var(--ink); font-size: 27px; letter-spacing: 0; line-height: 1.15; }
+        .page-subtitle { margin: 7px 0 0; color: var(--muted); font-size: 13px; }
+        .workspace-state { display: flex; align-items: center; gap: 8px; padding-bottom: 3px; color: var(--ink-soft); font-size: 11px; font-weight: 700; white-space: nowrap; }
+        .state-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 4px var(--lime-faint); }
+        .state-dot.preview { background: var(--orange); box-shadow: 0 0 0 4px var(--orange-faint); }
+
+        .network-field {
+            position: relative;
+            min-height: 285px;
+            overflow: hidden;
+            isolation: isolate;
+            background: var(--night-deep);
+            border-top: 1px solid #1d4542;
+            border-bottom: 1px solid #1d4542;
+        }
+        #network-canvas { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; }
+        .network-copy { width: min(470px, 72%); padding: 30px; color: #f5fffb; }
+        .eyebrow { display: flex; align-items: center; gap: 7px; margin: 0 0 11px; color: #9dcfc0; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+        .eyebrow::before { content: ""; width: 18px; height: 1px; background: currentColor; }
+        .network-title { margin: 0; max-width: 420px; font-size: 25px; line-height: 1.18; letter-spacing: 0; }
+        .network-copy > p { max-width: 400px; margin: 11px 0 22px; color: #b6d1ca; font-size: 12px; line-height: 1.7; }
+        .network-metrics { display: flex; flex-wrap: wrap; gap: 19px; }
+        .network-metric strong, .network-metric span { display: block; }
+        .network-metric strong { color: #fff; font-family: "DM Mono", monospace; font-size: 18px; font-weight: 500; }
+        .network-metric span { margin-top: 2px; color: #8dafaa; font-size: 10px; font-weight: 600; }
+        .network-legend { position: absolute; right: 26px; bottom: 21px; display: flex; align-items: center; gap: 13px; color: #c1dcd5; font-size: 10px; font-weight: 700; }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .legend-key { width: 7px; height: 7px; border-radius: 50%; background: #74cfbd; }
+        .legend-key.caution { background: #e5a066; }
+        .legend-key.risk { background: #db7979; }
+
+        .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 20px 0; }
+        .metric-card { min-height: 111px; padding: 16px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); }
+        .metric-card-top { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 11px; font-weight: 700; }
+        .metric-card-icon { display: grid; width: 27px; height: 27px; place-items: center; border-radius: 5px; color: var(--aqua); background: var(--aqua-faint); }
+        .metric-card-icon.warning { color: var(--orange); background: var(--orange-faint); }
+        .metric-card-icon.alert { color: var(--red); background: var(--red-faint); }
+        .metric-card-icon svg { width: 15px; height: 15px; }
+        .metric-value { margin-top: 13px; color: var(--ink); font-family: "DM Mono", monospace; font-size: 22px; font-weight: 500; letter-spacing: 0; }
+        .metric-meta { margin-top: 3px; color: var(--muted); font-size: 10px; font-weight: 600; }
+        .metric-meta.positive { color: var(--lime); }
+
+        .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, .65fr); gap: 20px; }
+        .stack { display: grid; gap: 20px; }
+        .panel { min-width: 0; border: 1px solid var(--line); border-radius: 7px; background: var(--paper); box-shadow: 0 2px 9px rgba(25, 57, 52, .025); }
+        .panel-header { display: flex; align-items: center; justify-content: space-between; min-height: 61px; padding: 0 18px; border-bottom: 1px solid var(--line); gap: 14px; }
+        .panel-title-wrap { display: flex; align-items: center; gap: 9px; }
+        .panel-title-wrap h2 { margin: 0; font-size: 14px; letter-spacing: 0; }
+        .panel-title-wrap p { margin: 2px 0 0; color: var(--muted); font-size: 10px; }
+        .panel-title-icon { display: grid; width: 27px; height: 27px; place-items: center; color: var(--aqua); background: var(--aqua-faint); border-radius: 5px; }
+        .panel-title-icon svg { width: 14px; height: 14px; }
+        .quiet-button { display: inline-flex; align-items: center; gap: 5px; padding: 6px 0; border: 0; color: var(--aqua); background: transparent; font-size: 11px; font-weight: 800; }
+        .quiet-button svg { width: 14px; height: 14px; }
+        .quiet-button:hover { color: var(--aqua-dark); }
+
+        .vendor-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .vendor-table th { padding: 11px 18px 9px; color: var(--muted); background: #fbfcfc; border-bottom: 1px solid var(--line); font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+        .vendor-table td { padding: 13px 18px; border-bottom: 1px solid #edf2f0; color: var(--ink-soft); font-size: 12px; font-weight: 600; }
+        .vendor-table tr:last-child td { border-bottom: 0; }
+        .vendor-table tbody tr { cursor: pointer; }
+        .vendor-table tbody tr:hover, .vendor-table tbody tr.selected { background: #f2f8f6; }
+        .supplier { display: flex; align-items: center; gap: 9px; color: var(--ink); font-weight: 800; }
+        .supplier-badge { display: grid; width: 26px; height: 26px; place-items: center; border-radius: 5px; color: var(--aqua-dark); background: #e1f1eb; font-size: 10px; font-weight: 800; }
+        .category { color: var(--muted); font-size: 10px; }
+        .score { font-family: "DM Mono", monospace; color: var(--ink); font-size: 12px; }
+        .risk-score { display: inline-flex; min-width: 39px; justify-content: center; padding: 3px 6px; border-radius: 4px; color: var(--lime); background: var(--lime-faint); font-family: "DM Mono", monospace; font-size: 10px; }
+        .risk-score.elevated { color: var(--orange); background: var(--orange-faint); }
+        .status-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 6px; border-radius: 4px; color: var(--aqua-dark); background: var(--aqua-faint); font-size: 9px; font-weight: 800; letter-spacing: .02em; }
+        .status-pill.pending { color: var(--orange); background: var(--orange-faint); }
+        .status-pill .pill-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+        .table-footer { display: flex; align-items: center; justify-content: space-between; min-height: 47px; padding: 0 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; font-weight: 600; }
+
+        .approval-list { padding: 3px 18px 10px; }
+        .approval-item { display: grid; grid-template-columns: 29px 1fr auto; gap: 10px; align-items: center; min-height: 65px; border-bottom: 1px solid #edf2f0; }
+        .approval-item:last-child { border-bottom: 0; }
+        .approval-icon { display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid var(--line); border-radius: 50%; color: var(--orange); background: var(--orange-faint); }
+        .approval-icon svg { width: 14px; height: 14px; }
+        .approval-main strong, .approval-main span { display: block; }
+        .approval-main strong { color: var(--ink); font-size: 11px; }
+        .approval-main span { margin-top: 3px; color: var(--muted); font-size: 10px; }
+        .approval-amount { color: var(--ink-soft); font-family: "DM Mono", monospace; font-size: 10px; }
+        .empty-queue { padding: 24px 18px 27px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+
+        .analyst-body { padding: 17px; }
+        .analyst-prompt { display: flex; gap: 10px; align-items: flex-start; }
+        .analyst-orb { display: grid; flex: 0 0 auto; width: 30px; height: 30px; place-items: center; border-radius: 50%; color: #e9fff8; background: var(--night); }
+        .analyst-orb svg { width: 15px; height: 15px; }
+        .analyst-message { padding: 11px; border-radius: 0 6px 6px 6px; color: var(--ink-soft); background: #f1f7f5; font-size: 11px; line-height: 1.65; }
+        .citation-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 13px 0 16px 40px; }
+        .citation { display: inline-flex; align-items: center; gap: 4px; padding: 4px 6px; border: 1px solid var(--line); border-radius: 4px; color: var(--aqua); background: #fff; font-size: 9px; font-weight: 700; }
+        .citation svg { width: 10px; height: 10px; }
+        .analyst-form { position: relative; }
+        .analyst-form input { width: 100%; min-height: 41px; padding: 0 43px 0 11px; border: 1px solid var(--line-strong); border-radius: 6px; color: var(--ink); background: #fff; font-size: 11px; }
+        .analyst-form input::placeholder { color: #9caeaa; }
+        .analyst-form button { position: absolute; top: 5px; right: 5px; display: grid; width: 31px; height: 31px; place-items: center; border: 0; border-radius: 5px; color: #fff; background: var(--aqua); }
+        .analyst-form button:hover { background: var(--aqua-dark); }
+        .analyst-form button svg { width: 15px; height: 15px; }
+        .analyst-footer { display: flex; justify-content: space-between; margin-top: 10px; color: var(--muted); font-size: 9px; font-weight: 600; }
+
+        .attention-body { padding: 15px 18px 18px; }
+        .attention-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #edf2f0; }
+        .attention-row:last-child { border-bottom: 0; padding-bottom: 0; }
+        .attention-marker { display: block; flex: 0 0 auto; width: 6px; height: 6px; border-radius: 50%; background: var(--orange); }
+        .attention-marker.red { background: var(--red); }
+        .attention-text { min-width: 0; flex: 1; }
+        .attention-text strong, .attention-text span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .attention-text strong { font-size: 11px; }
+        .attention-text span { margin-top: 2px; color: var(--muted); font-size: 9px; }
+        .attention-action { display: grid; width: 26px; height: 26px; place-items: center; border: 0; border-radius: 4px; color: var(--aqua); background: transparent; }
+        .attention-action:hover { background: var(--aqua-faint); }
+        .attention-action svg { width: 14px; height: 14px; }
+
+        .modal-backdrop { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 18px; background: rgba(7, 27, 26, .52); backdrop-filter: blur(3px); }
+        .modal-backdrop[hidden] { display: none; }
+        .modal { width: min(440px, 100%); overflow: hidden; border: 1px solid rgba(255,255,255,.15); border-radius: 8px; background: var(--paper); box-shadow: var(--shadow); }
+        .modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 21px 22px 16px; border-bottom: 1px solid var(--line); }
+        .modal-head h2 { margin: 0; font-size: 17px; }
+        .modal-head p { margin: 5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+        .modal-close { display: grid; flex: 0 0 auto; width: 29px; height: 29px; place-items: center; border: 0; border-radius: 5px; color: var(--muted); background: transparent; }
+        .modal-close:hover { color: var(--ink); background: var(--canvas); }
+        .modal-close svg { width: 16px; height: 16px; }
+        .modal-body { display: grid; gap: 14px; padding: 19px 22px 22px; }
+        .field { display: grid; gap: 6px; }
+        .field label { color: var(--ink-soft); font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+        .field input, .field select, .field textarea { width: 100%; min-height: 39px; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: 5px; color: var(--ink); background: #fff; font-size: 12px; }
+        .field textarea { min-height: 76px; padding: 9px 10px; resize: vertical; }
+        .form-hint { margin: -4px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+        .secondary-button { display: inline-flex; align-items: center; justify-content: center; min-height: 37px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 5px; color: var(--ink-soft); background: #fff; font-size: 11px; font-weight: 800; }
+        .secondary-button:hover { border-color: var(--aqua); color: var(--aqua); }
+
+        .toast-region { position: fixed; right: 20px; bottom: 20px; z-index: 40; display: grid; gap: 8px; width: min(350px, calc(100vw - 40px)); }
+        .toast { display: flex; align-items: flex-start; gap: 10px; padding: 12px; border: 1px solid var(--line-strong); border-left: 3px solid var(--aqua); border-radius: 6px; color: var(--ink-soft); background: var(--paper); box-shadow: var(--shadow); font-size: 11px; line-height: 1.5; }
+        .toast.error { border-left-color: var(--red); }
+        .toast svg { flex: 0 0 auto; width: 15px; height: 15px; color: var(--aqua); }
+        .toast.error svg { color: var(--red); }
+
+        @media (max-width: 1060px) {
+            .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .sidebar { width: 208px; }
+            .workspace { margin-left: 208px; padding: 0 24px 30px; }
+        }
+
+        @media (max-width: 720px) {
+            .sidebar { position: relative; width: 100%; min-height: auto; padding: 12px 14px; overflow-x: auto; flex-direction: row; align-items: center; gap: 14px; }
+            .brand { flex: 0 0 auto; padding: 0; }
+            .brand small, .nav-label, .sidebar-spacer, .sidebar-action, .sidebar-footer { display: none; }
+            .nav-list { display: flex; gap: 3px; }
+            .nav-button { width: auto; min-height: 36px; padding: 0 8px; white-space: nowrap; }
+            .nav-button span:not(.nav-count) { display: none; }
+            .nav-button .nav-count { display: none; }
+            .workspace { margin-left: 0; padding: 0 15px 26px; }
+            .topbar { min-height: 60px; }
+            .top-actions .icon-button:first-child { display: none; }
+            .page-head { align-items: flex-start; padding: 22px 0 16px; }
+            h1 { font-size: 22px; }
+            .workspace-state { display: none; }
+            .network-field { min-height: 275px; margin: 0 -15px; }
+            .network-copy { width: 78%; padding: 25px 18px; }
+            .network-title { font-size: 22px; }
+            .network-legend { right: 16px; bottom: 16px; }
+            .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+            .metric-card { min-height: 98px; padding: 12px; }
+            .metric-value { margin-top: 9px; font-size: 19px; }
+            .vendor-table th:nth-child(3), .vendor-table td:nth-child(3) { display: none; }
+            .vendor-table th, .vendor-table td { padding-left: 12px; padding-right: 12px; }
+            .panel-header { padding: 0 13px; }
+            .approval-list, .analyst-body, .attention-body { padding-left: 13px; padding-right: 13px; }
+        }
+
+        @media (max-width: 410px) {
+            .connect-button span { display: none; }
+            .connect-button { width: 38px; padding: 0; }
+            .network-copy { width: 89%; }
+            .network-metrics { gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar" aria-label="Primary navigation">
+        <div class="brand">
+            <div class="brand-mark">PA</div>
+            <div>Procure AI<small>Command Center</small></div>
+        </div>
+
+        <div class="nav-label">Workspace</div>
+        <nav class="nav-list">
+            <button class="nav-button active" data-view="Overview" type="button"><i data-lucide="layout-dashboard"></i><span>Overview</span></button>
+            <button class="nav-button" data-view="Vendors" type="button"><i data-lucide="building-2"></i><span>Vendors</span><span class="nav-count" id="vendor-nav-count">03</span></button>
+            <button class="nav-button" data-view="Sourcing" type="button"><i data-lucide="files"></i><span>Sourcing</span></button>
+            <button class="nav-button" data-view="Approvals" type="button"><i data-lucide="badge-check"></i><span>Approvals</span><span class="nav-count" id="approval-nav-count">00</span></button>
+            <button class="nav-button" data-view="Contracts" type="button"><i data-lucide="file-text"></i><span>Contracts</span></button>
+            <button class="nav-button" data-view="Intelligence" type="button"><i data-lucide="sparkles"></i><span>Intelligence</span></button>
+        </nav>
+
+        <div class="sidebar-spacer"></div>
+        <button class="sidebar-action" id="open-order" type="button"><i data-lucide="plus"></i>New purchase order</button>
+        <div class="sidebar-footer">
+            <button class="user-button" id="user-menu" type="button" title="Connect a workspace">
+                <span class="user-avatar" id="user-avatar">PA</span>
+                <span class="user-meta"><strong id="user-name">Preview workspace</strong><span id="user-role">No API session</span></span>
+                <i data-lucide="chevrons-up-down"></i>
+            </button>
+        </div>
+    </aside>
+
+    <main class="workspace">
+        <header class="topbar">
+            <div class="crumb">Workspace / <strong id="crumb-current">Overview</strong></div>
+            <div class="top-actions">
+                <button class="icon-button" type="button" id="api-docs" title="Open API documentation"><i data-lucide="braces"></i></button>
+                <button class="icon-button" type="button" id="notifications" title="View alerts"><i data-lucide="bell"></i></button>
+                <button class="connect-button" id="connect-button" type="button"><i data-lucide="plug-zap"></i><span>Connect workspace</span></button>
+            </div>
+        </header>
+
+        <section class="page-head" aria-labelledby="page-title">
+            <div>
+                <h1 id="page-title">Procurement command center</h1>
+                <p class="page-subtitle">A focused view of supplier health, approvals, and active purchasing signals.</p>
+            </div>
+            <div class="workspace-state"><span class="state-dot preview" id="state-dot"></span><span id="workspace-state-text">Preview data</span></div>
+        </section>
+
+        <section class="network-field" aria-labelledby="network-title">
+            <canvas id="network-canvas" aria-label="Interactive three-dimensional supplier intelligence network"></canvas>
+            <div class="network-copy">
+                <p class="eyebrow">Live intelligence layer</p>
+                <h2 class="network-title" id="network-title">Your supplier network, rendered as one decision surface.</h2>
+                <p>See supplier quality, compliance posture, and delivery signals in one connected operational view.</p>
+                <div class="network-metrics">
+                    <div class="network-metric"><strong id="network-score">91.5%</strong><span>delivery reliability</span></div>
+                    <div class="network-metric"><strong id="network-suppliers">03</strong><span>active suppliers</span></div>
+                    <div class="network-metric"><strong id="network-risk">01</strong><span>watchlist items</span></div>
+                </div>
+            </div>
+            <div class="network-legend" aria-label="Network legend">
+                <span class="legend-item"><i class="legend-key"></i>Healthy</span>
+                <span class="legend-item"><i class="legend-key caution"></i>Review</span>
+                <span class="legend-item"><i class="legend-key risk"></i>Risk</span>
+            </div>
+        </section>
+
+        <section class="metric-grid" aria-label="Key procurement metrics">
+            <article class="metric-card">
+                <div class="metric-card-top"><span>Managed spend</span><span class="metric-card-icon"><i data-lucide="wallet-cards"></i></span></div>
+                <div class="metric-value" id="managed-spend">$379.8k</div>
+                <div class="metric-meta positive" id="managed-spend-meta">RFQ-2026-001 in review</div>
+            </article>
+            <article class="metric-card">
+                <div class="metric-card-top"><span>Supplier health</span><span class="metric-card-icon"><i data-lucide="activity"></i></span></div>
+                <div class="metric-value" id="supplier-health">4.48 / 5</div>
+                <div class="metric-meta positive" id="supplier-health-meta">Above target threshold</div>
+            </article>
+            <article class="metric-card">
+                <div class="metric-card-top"><span>Pending approval</span><span class="metric-card-icon warning"><i data-lucide="clock-3"></i></span></div>
+                <div class="metric-value" id="pending-approval">00</div>
+                <div class="metric-meta" id="pending-approval-meta">No decisions waiting</div>
+            </article>
+            <article class="metric-card">
+                <div class="metric-card-top"><span>Attention needed</span><span class="metric-card-icon alert"><i data-lucide="triangle-alert"></i></span></div>
+                <div class="metric-value" id="attention-count">01</div>
+                <div class="metric-meta" id="attention-meta">Compliance review flagged</div>
+            </article>
+        </section>
+
+        <section class="dashboard-grid">
+            <div class="stack">
+                <article class="panel" aria-labelledby="vendor-panel-title">
+                    <div class="panel-header">
+                        <div class="panel-title-wrap">
+                            <span class="panel-title-icon"><i data-lucide="building-2"></i></span>
+                            <div><h2 id="vendor-panel-title">Supplier portfolio</h2><p>Current performance and risk posture</p></div>
+                        </div>
+                        <button class="quiet-button" type="button" data-view-button="Vendors">Open vendors <i data-lucide="arrow-up-right"></i></button>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="vendor-table">
+                            <thead><tr><th>Supplier</th><th>Rating</th><th>Compliance</th><th>Risk</th></tr></thead>
+                            <tbody id="vendor-rows"></tbody>
+                        </table>
+                    </div>
+                    <div class="table-footer"><span id="vendor-footer">3 suppliers in the active portfolio</span><button class="quiet-button" type="button" id="refresh-vendors"><i data-lucide="refresh-cw"></i>Refresh</button></div>
+                </article>
+
+                <article class="panel" aria-labelledby="approval-panel-title">
+                    <div class="panel-header">
+                        <div class="panel-title-wrap">
+                            <span class="panel-title-icon"><i data-lucide="badge-check"></i></span>
+                            <div><h2 id="approval-panel-title">Approval queue</h2><p>Purchase orders requiring a decision</p></div>
+                        </div>
+                        <button class="quiet-button" type="button" id="open-order-inline"><i data-lucide="plus"></i>New order</button>
+                    </div>
+                    <div class="approval-list" id="approval-list"></div>
+                </article>
+            </div>
+
+            <div class="stack">
+                <article class="panel" aria-labelledby="analyst-panel-title">
+                    <div class="panel-header">
+                        <div class="panel-title-wrap">
+                            <span class="panel-title-icon"><i data-lucide="sparkles"></i></span>
+                            <div><h2 id="analyst-panel-title">AI analyst</h2><p>Grounded procurement assistance</p></div>
+                        </div>
+                        <button class="quiet-button" type="button" id="suggest-question">Prompt</button>
+                    </div>
+                    <div class="analyst-body">
+                        <div class="analyst-prompt"><span class="analyst-orb"><i data-lucide="sparkles"></i></span><div class="analyst-message" id="analyst-response">Northstar Logistics has the highest current risk score. Its compliance review is still pending, so it is the supplier to clear before the next award decision.</div></div>
+                        <div class="citation-list" id="citation-list"><span class="citation"><i data-lucide="database"></i>Supplier portfolio</span><span class="citation"><i data-lucide="shield-check"></i>Compliance status</span></div>
+                        <form class="analyst-form" id="analyst-form">
+                            <input id="analyst-input" autocomplete="off" placeholder="Ask about suppliers, inventory, or contracts" aria-label="Ask the AI analyst">
+                            <button type="submit" title="Send question"><i data-lucide="arrow-up"></i></button>
+                        </form>
+                        <div class="analyst-footer"><span>Responses use connected workspace data</span><span id="analyst-mode">Preview mode</span></div>
+                    </div>
+                </article>
+
+                <article class="panel" aria-labelledby="attention-panel-title">
+                    <div class="panel-header">
+                        <div class="panel-title-wrap">
+                            <span class="panel-title-icon"><i data-lucide="radar"></i></span>
+                            <div><h2 id="attention-panel-title">Signals requiring attention</h2><p>Prioritized for the current workspace</p></div>
+                        </div>
+                    </div>
+                    <div class="attention-body" id="attention-list"></div>
+                </article>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div class="modal-backdrop" id="auth-modal" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+        <div class="modal-head">
+            <div><h2 id="auth-title">Connect workspace</h2><p>Sign in to load live vendors, approvals, contracts, and AI responses from the Procure AI API.</p></div>
+            <button class="modal-close" type="button" data-close-modal="auth-modal" title="Close"><i data-lucide="x"></i></button>
+        </div>
+        <form class="modal-body" id="login-form">
+            <div class="field"><label for="login-email">Work email</label><input id="login-email" type="email" value="admin@procureai.local" autocomplete="email" required></div>
+            <div class="field"><label for="login-password">Password</label><input id="login-password" type="password" value="password" autocomplete="current-password" required></div>
+            <p class="form-hint">Demo workspace credentials are prefilled. The access token is kept only for this browser session.</p>
+            <div class="modal-actions"><button class="secondary-button" type="button" data-close-modal="auth-modal">Cancel</button><button class="primary-button" type="submit"><i data-lucide="log-in"></i>Connect</button></div>
+        </form>
+    </section>
+</div>
+
+<div class="modal-backdrop" id="order-modal" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="order-title">
+        <div class="modal-head">
+            <div><h2 id="order-title">Create purchase order</h2><p>Draft an order against an approved supplier, then submit it through the standard approval workflow.</p></div>
+            <button class="modal-close" type="button" data-close-modal="order-modal" title="Close"><i data-lucide="x"></i></button>
+        </div>
+        <form class="modal-body" id="order-form">
+            <div class="field"><label for="order-vendor">Supplier</label><select id="order-vendor" required></select></div>
+            <div class="field"><label for="order-amount">Order amount (USD)</label><input id="order-amount" type="number" min="0.01" step="0.01" value="25000" required></div>
+            <div class="field"><label for="order-items">Line items</label><textarea id="order-items" required>{"sku":"ELEC-CTRL-01","qty":20}</textarea></div>
+            <div class="field"><label for="order-approvers">Approval chain</label><input id="order-approvers" value="APPROVER_L1,APPROVER_L2"></div>
+            <div class="modal-actions"><button class="secondary-button" type="button" data-close-modal="order-modal">Cancel</button><button class="primary-button" type="submit"><i data-lucide="file-plus-2"></i>Create draft</button></div>
+        </form>
+    </section>
+</div>
+
+<div class="toast-region" id="toast-region" aria-live="polite"></div>
+
+<script>
+    const previewVendors = [
+        { id: 1, name: "Apex Components", category: "Electronics", rating: 4.7, complianceStatus: "COMPLIANT", riskScore: 18 },
+        { id: 2, name: "Northstar Logistics", category: "Logistics", rating: 4.2, complianceStatus: "PENDING_REVIEW", riskScore: 34 },
+        { id: 3, name: "Prism Industrial Supply", category: "MRO", rating: 4.55, complianceStatus: "COMPLIANT", riskScore: 22 }
+    ];
+
+    const previewOrders = [];
+    const state = {
+        token: sessionStorage.getItem("procureai.accessToken"),
+        user: JSON.parse(sessionStorage.getItem("procureai.user") || "null"),
+        vendors: previewVendors,
+        orders: previewOrders,
+        selectedVendorId: 2
+    };
+
+    const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 1 });
+    const fullMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => [...document.querySelectorAll(selector)];
+    const escapeHtml = (value) => String(value ?? "").replace(/[&<>'\"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", "\"": "&quot;" }[character]));
+
+    function refreshIcons() {
+        if (window.lucide) window.lucide.createIcons({ attrs: { "stroke-width": 1.8 } });
+    }
+
+    function showToast(message, type = "success") {
+        const toast = document.createElement("div");
+        toast.className = `toast ${type === "error" ? "error" : ""}`;
+        toast.innerHTML = `<i data-lucide="${type === "error" ? "circle-alert" : "circle-check"}"></i><span>${escapeHtml(message)}</span>`;
+        $("#toast-region").append(toast);
+        refreshIcons();
+        window.setTimeout(() => toast.remove(), 4500);
+    }
+
+    function apiHeaders() {
+        return state.token ? { "Authorization": `Bearer ${state.token}`, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
+    }
+
+    async function api(path, options = {}) {
+        const response = await fetch(path, { ...options, headers: { ...apiHeaders(), ...(options.headers || {}) } });
+        if (response.status === 401 || response.status === 403) {
+            disconnect(false);
+            throw new Error("Your workspace session has expired. Please connect again.");
+        }
+        if (!response.ok) {
+            const detail = await response.json().catch(() => ({}));
+            throw new Error(detail.detail || detail.message || `Request failed (${response.status})`);
+        }
+        return response.status === 204 ? null : response.json();
+    }
+
+    function renderVendorOptions() {
+        $("#order-vendor").innerHTML = state.vendors.map((vendor) => `<option value="${vendor.id}">${escapeHtml(vendor.name)}</option>`).join("");
+    }
+
+    function complianceLabel(status) { return String(status || "PENDING_REVIEW").replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase()); }
+    function initials(name) { return String(name || "PA").split(" ").slice(0, 2).map((part) => part[0]).join("").toUpperCase(); }
+    function averageRating() { return state.vendors.length ? state.vendors.reduce((total, vendor) => total + Number(vendor.rating || 0), 0) / state.vendors.length : 0; }
+    function averageRisk() { return state.vendors.length ? state.vendors.reduce((total, vendor) => total + Number(vendor.riskScore || 0), 0) / state.vendors.length : 0; }
+
+    function renderVendors() {
+        const rows = state.vendors.map((vendor) => {
+            const pending = vendor.complianceStatus !== "COMPLIANT";
+            const elevated = Number(vendor.riskScore) >= 30;
+            return `<tr class="${vendor.id === state.selectedVendorId ? "selected" : ""}" data-vendor-id="${vendor.id}">
+                <td><div class="supplier"><span class="supplier-badge">${escapeHtml(initials(vendor.name))}</span><span>${escapeHtml(vendor.name)}<span class="category">${escapeHtml(vendor.category)}</span></span></div></td>
+                <td><span class="score">${Number(vendor.rating || 0).toFixed(2)}</span></td>
+                <td><span class="status-pill ${pending ? "pending" : ""}"><i class="pill-dot"></i>${escapeHtml(complianceLabel(vendor.complianceStatus))}</span></td>
+                <td><span class="risk-score ${elevated ? "elevated" : ""}">${String(vendor.riskScore).padStart(2, "0")}</span></td>
+            </tr>`;
+        }).join("");
+        $("#vendor-rows").innerHTML = rows || `<tr><td colspan="4">No suppliers found.</td></tr>`;
+        $("#vendor-footer").textContent = `${state.vendors.length} supplier${state.vendors.length === 1 ? "" : "s"} in the active portfolio`;
+        $("#vendor-nav-count").textContent = String(state.vendors.length).padStart(2, "0");
+        $$("[data-vendor-id]").forEach((row) => row.addEventListener("click", () => {
+            state.selectedVendorId = Number(row.dataset.vendorId);
+            renderVendors();
+            if (window.supplierNetwork) window.supplierNetwork.highlight(state.selectedVendorId);
+        }));
+        renderVendorOptions();
+    }
+
+    function renderOrders() {
+        const actionable = state.orders.filter((order) => ["PENDING_L1", "PENDING_L2", "SUBMITTED", "DRAFT"].includes(order.status));
+        $("#pending-approval").textContent = String(actionable.length).padStart(2, "0");
+        $("#approval-nav-count").textContent = String(actionable.length).padStart(2, "0");
+        $("#pending-approval-meta").textContent = actionable.length ? `${actionable.length} purchase decision${actionable.length === 1 ? "" : "s"} waiting` : "No decisions waiting";
+        if (!actionable.length) {
+            $("#approval-list").innerHTML = `<div class="empty-queue">No purchase orders require a decision right now. New orders created here will appear in this queue as drafts.</div>`;
+            return;
+        }
+        $("#approval-list").innerHTML = actionable.slice(0, 4).map((order) => `<div class="approval-item">
+            <span class="approval-icon"><i data-lucide="clock-3"></i></span>
+            <span class="approval-main"><strong>${escapeHtml(order.vendorName || "Supplier order")}</strong><span>${escapeHtml(String(order.status).replaceAll("_", " "))} | ${escapeHtml(order.approverChain || "Approval routing pending")}</span></span>
+            <span class="approval-amount">${fullMoney.format(Number(order.amount || 0))}</span>
+        </div>`).join("");
+        refreshIcons();
+    }
+
+    function renderSignals() {
+        const riskVendors = state.vendors.filter((vendor) => Number(vendor.riskScore) >= 30 || vendor.complianceStatus !== "COMPLIANT");
+        const totalSpend = state.orders.length ? state.orders.reduce((total, order) => total + Number(order.amount || 0), 0) : 379750;
+        const health = averageRating();
+        $("#managed-spend").textContent = money.format(totalSpend);
+        $("#managed-spend-meta").textContent = state.orders.length ? `${state.orders.length} live purchase order${state.orders.length === 1 ? "" : "s"}` : "RFQ-2026-001 in review";
+        $("#supplier-health").textContent = `${health.toFixed(2)} / 5`;
+        $("#attention-count").textContent = String(riskVendors.length).padStart(2, "0");
+        $("#attention-meta").textContent = riskVendors.length ? `${riskVendors.length} supplier signal${riskVendors.length === 1 ? "" : "s"} to review` : "No material risk signals";
+        $("#network-score").textContent = `${Math.max(0, 100 - averageRisk() * .25).toFixed(1)}%`;
+        $("#network-suppliers").textContent = String(state.vendors.length).padStart(2, "0");
+        $("#network-risk").textContent = String(riskVendors.length).padStart(2, "0");
+        $("#attention-list").innerHTML = (riskVendors.length ? riskVendors : [{ name: "Portfolio healthy", category: "No material supplier signals", riskScore: 0 }]).slice(0, 3).map((vendor) => {
+            const isRisk = Number(vendor.riskScore) >= 45;
+            const needsReview = vendor.complianceStatus && vendor.complianceStatus !== "COMPLIANT";
+            return `<div class="attention-row"><span class="attention-marker ${isRisk ? "red" : ""}"></span><span class="attention-text"><strong>${escapeHtml(vendor.name)}</strong><span>${needsReview ? "Compliance review pending" : escapeHtml(vendor.category || "Portfolio monitoring")}${vendor.riskScore ? ` | Risk score ${vendor.riskScore}` : ""}</span></span><button class="attention-action" type="button" title="Review supplier"><i data-lucide="arrow-up-right"></i></button></div>`;
+        }).join("");
+        refreshIcons();
+    }
+
+    function renderSession() {
+        const connected = Boolean(state.token && state.user);
+        $("#connect-button").innerHTML = connected ? `<i data-lucide="log-out"></i><span>Disconnect</span>` : `<i data-lucide="plug-zap"></i><span>Connect workspace</span>`;
+        $("#state-dot").classList.toggle("preview", !connected);
+        $("#workspace-state-text").textContent = connected ? "Live workspace" : "Preview data";
+        $("#analyst-mode").textContent = connected ? "Live API mode" : "Preview mode";
+        $("#user-name").textContent = connected ? state.user.fullName : "Preview workspace";
+        $("#user-role").textContent = connected ? (state.user.roles || ["CONNECTED"])[0].replaceAll("_", " ") : "No API session";
+        $("#user-avatar").textContent = connected ? initials(state.user.fullName) : "PA";
+        refreshIcons();
+    }
+
+    function renderAll() { renderVendors(); renderOrders(); renderSignals(); renderSession(); }
+
+    function openModal(id) {
+        if (id === "order-modal" && !state.token) { openModal("auth-modal"); showToast("Connect your workspace before creating a purchase order.", "error"); return; }
+        $("#" + id).hidden = false;
+        window.setTimeout(() => $("#" + id).querySelector("input, select, textarea")?.focus(), 20);
+    }
+    function closeModal(id) { $("#" + id).hidden = true; }
+
+    function disconnect(showMessage = true) {
+        state.token = null;
+        state.user = null;
+        state.vendors = previewVendors;
+        state.orders = previewOrders;
+        sessionStorage.removeItem("procureai.accessToken");
+        sessionStorage.removeItem("procureai.user");
+        renderAll();
+        if (showMessage) showToast("Workspace disconnected. Showing the preview snapshot.");
+    }
+
+    async function loadLiveWorkspace() {
+        const [vendors, orders] = await Promise.all([api("/vendors?size=20"), api("/purchase-orders?size=20")]);
+        state.vendors = vendors.content || [];
+        state.orders = orders.content || [];
+        renderAll();
+        if (window.supplierNetwork) window.supplierNetwork.sync(state.vendors);
+    }
+
+    async function login(event) {
+        event.preventDefault();
+        const submit = event.submitter;
+        submit.disabled = true;
+        submit.textContent = "Connecting...";
+        try {
+            const result = await fetch("/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: $("#login-email").value.trim(), password: $("#login-password").value }) });
+            if (!result.ok) throw new Error("We could not verify those credentials.");
+            const session = await result.json();
+            state.token = session.accessToken;
+            state.user = { fullName: session.fullName, roles: session.roles || [] };
+            sessionStorage.setItem("procureai.accessToken", state.token);
+            sessionStorage.setItem("procureai.user", JSON.stringify(state.user));
+            await loadLiveWorkspace();
+            closeModal("auth-modal");
+            showToast(`Connected as ${session.fullName}. Live workspace loaded.`);
+        } catch (error) {
+            showToast(error.message || "Unable to connect to the workspace.", "error");
+        } finally {
+            submit.disabled = false;
+            submit.innerHTML = `<i data-lucide="log-in"></i>Connect`;
+            refreshIcons();
+        }
+    }
+
+    async function createOrder(event) {
+        event.preventDefault();
+        const submit = event.submitter;
+        const itemsJson = $("#order-items").value.trim();
+        try { JSON.parse(itemsJson); } catch (_) { showToast("Line items must be valid JSON.", "error"); return; }
+        submit.disabled = true;
+        submit.textContent = "Creating...";
+        try {
+            const order = await api("/purchase-orders", { method: "POST", body: JSON.stringify({ vendorId: Number($("#order-vendor").value), amount: Number($("#order-amount").value), itemsJson, approverChain: $("#order-approvers").value.trim() || null }) });
+            state.orders.unshift(order);
+            renderAll();
+            closeModal("order-modal");
+            showToast("Purchase order draft created and added to the approval queue.");
+        } catch (error) { showToast(error.message || "Unable to create purchase order.", "error"); }
+        finally { submit.disabled = false; submit.innerHTML = `<i data-lucide="file-plus-2"></i>Create draft`; refreshIcons(); }
+    }
+
+    async function askAnalyst(event) {
+        event.preventDefault();
+        const input = $("#analyst-input");
+        const message = input.value.trim();
+        if (!message) return;
+        if (!state.token) { openModal("auth-modal"); showToast("Connect your workspace to ask the AI analyst.", "error"); return; }
+        const submit = event.submitter;
+        submit.disabled = true;
+        $("#analyst-response").textContent = "Reviewing connected procurement data...";
+        try {
+            const response = await api("/ai/chat", { method: "POST", body: JSON.stringify({ message, vendorId: state.selectedVendorId, history: [] }) });
+            $("#analyst-response").textContent = response.reply || "The analyst did not return a response.";
+            const citations = response.citations || [];
+            $("#citation-list").innerHTML = citations.length ? citations.map((citation) => `<span class="citation"><i data-lucide="file-search"></i>${escapeHtml(citation.source || citation.title || "Retrieved record")}</span>`).join("") : `<span class="citation"><i data-lucide="database"></i>Connected workspace</span>`;
+            input.value = "";
+            refreshIcons();
+        } catch (error) {
+            $("#analyst-response").textContent = "The analyst could not complete that request.";
+            showToast(error.message || "Unable to reach the AI analyst.", "error");
+        } finally { submit.disabled = false; }
+    }
+
+    function initNetwork() {
+        const canvas = $("#network-canvas");
+        if (!window.THREE || !canvas) return;
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+        camera.position.set(0, 0.4, 10);
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setClearColor(0x000000, 0);
+        const root = new THREE.Group();
+        root.position.set(2.1, -0.1, 0);
+        scene.add(root);
+        scene.add(new THREE.AmbientLight(0xbce6d6, 1.2));
+        const key = new THREE.PointLight(0x82e3c6, 18, 18);
+        key.position.set(-3, 2, 5);
+        scene.add(key);
+        const warm = new THREE.PointLight(0xe6a16d, 10, 14);
+        warm.position.set(5, -2, 3);
+        scene.add(warm);
+
+        const nodes = [];
+        const positions = [[0, 0, 0], [2.1, 1.25, -.4], [2.5, -1.55, .25], [-2.25, 1.15, .2], [-2.0, -1.55, -.5], [.2, 2.35, -.9], [.35, -2.25, .4]];
+        const palette = [0x74cfbd, 0xe5a066, 0x74cfbd, 0xdb7979, 0x74cfbd, 0x74cfbd, 0xe5a066];
+        const nodeGeometry = new THREE.IcosahedronGeometry(.26, 1);
+        positions.forEach((position, index) => {
+            const material = new THREE.MeshStandardMaterial({ color: palette[index], roughness: .38, metalness: .18, emissive: palette[index], emissiveIntensity: .12 });
+            const node = new THREE.Mesh(nodeGeometry, material);
+            node.position.set(...position);
+            node.scale.setScalar(index === 0 ? 1.55 : 1);
+            root.add(node);
+            nodes.push(node);
+        });
+        const links = [[0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6], [1, 5], [2, 6], [3, 5], [4, 6]];
+        const lineMaterial = new THREE.LineBasicMaterial({ color: 0x64aa9a, transparent: true, opacity: .32 });
+        links.forEach(([from, to]) => {
+            const geometry = new THREE.BufferGeometry().setFromPoints([nodes[from].position, nodes[to].position]);
+            root.add(new THREE.Line(geometry, lineMaterial));
+        });
+        const dustGeometry = new THREE.BufferGeometry();
+        const dust = new Float32Array(150 * 3);
+        for (let index = 0; index < dust.length; index += 3) {
+            dust[index] = (Math.random() - .5) * 12;
+            dust[index + 1] = (Math.random() - .5) * 7;
+            dust[index + 2] = (Math.random() - .5) * 4;
+        }
+        dustGeometry.setAttribute("position", new THREE.BufferAttribute(dust, 3));
+        const points = new THREE.Points(dustGeometry, new THREE.PointsMaterial({ color: 0x8abdb1, size: .025, transparent: true, opacity: .42 }));
+        root.add(points);
+        let pointerX = 0;
+        let pointerY = 0;
+        let targetNode = 1;
+        canvas.addEventListener("pointermove", (event) => {
+            const bounds = canvas.getBoundingClientRect();
+            pointerX = ((event.clientX - bounds.left) / bounds.width - .5) * 2;
+            pointerY = ((event.clientY - bounds.top) / bounds.height - .5) * 2;
+        });
+        function resize() {
+            const bounds = canvas.getBoundingClientRect();
+            renderer.setSize(bounds.width, bounds.height, false);
+            camera.aspect = bounds.width / bounds.height;
+            camera.updateProjectionMatrix();
+        }
+        new ResizeObserver(resize).observe(canvas);
+        resize();
+        function animate(time) {
+            root.rotation.y += .0021;
+            root.rotation.x += (pointerY * .09 - root.rotation.x) * .03;
+            root.rotation.z += (pointerX * .045 - root.rotation.z) * .025;
+            nodes.forEach((node, index) => {
+                const pulse = 1 + Math.sin(time * .0017 + index) * .055;
+                node.scale.setScalar((index === targetNode ? 1.48 : index === 0 ? 1.55 : 1) * pulse);
+            });
+            points.rotation.y -= .00055;
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+        requestAnimationFrame(animate);
+        window.supplierNetwork = {
+            highlight(id) { targetNode = Math.max(1, Math.min(nodes.length - 1, Number(id) || 1)); },
+            sync(vendors) {
+                vendors.slice(0, 3).forEach((vendor, index) => {
+                    const node = nodes[index + 1];
+                    const statusColor = Number(vendor.riskScore) >= 40 ? 0xdb7979 : vendor.complianceStatus !== "COMPLIANT" ? 0xe5a066 : 0x74cfbd;
+                    node.material.color.setHex(statusColor);
+                    node.material.emissive.setHex(statusColor);
+                });
+            }
+        };
+        window.supplierNetwork.highlight(state.selectedVendorId);
+    }
+
+    function bindEvents() {
+        $("#connect-button").addEventListener("click", () => state.token ? disconnect() : openModal("auth-modal"));
+        $("#user-menu").addEventListener("click", () => state.token ? disconnect() : openModal("auth-modal"));
+        [$("#open-order"), $("#open-order-inline")].forEach((button) => button.addEventListener("click", () => openModal("order-modal")));
+        $$("[data-close-modal]").forEach((button) => button.addEventListener("click", () => closeModal(button.dataset.closeModal)));
+        $$(".modal-backdrop").forEach((modal) => modal.addEventListener("click", (event) => { if (event.target === modal) closeModal(modal.id); }));
+        $("#login-form").addEventListener("submit", login);
+        $("#order-form").addEventListener("submit", createOrder);
+        $("#analyst-form").addEventListener("submit", askAnalyst);
+        $("#suggest-question").addEventListener("click", () => { $("#analyst-input").value = "Which supplier should I review before the next award decision?"; $("#analyst-input").focus(); });
+        $("#refresh-vendors").addEventListener("click", async () => {
+            if (!state.token) { openModal("auth-modal"); return; }
+            try { await loadLiveWorkspace(); showToast("Supplier portfolio refreshed."); } catch (error) { showToast(error.message, "error"); }
+        });
+        $("#notifications").addEventListener("click", () => document.getElementById("attention-panel-title").scrollIntoView({ behavior: "smooth", block: "center" }));
+        $("#api-docs").addEventListener("click", () => window.open("/swagger-ui.html", "_blank", "noopener"));
+        $$("[data-view], [data-view-button]").forEach((button) => button.addEventListener("click", () => {
+            const view = button.dataset.view || button.dataset.viewButton;
+            $$(".nav-button").forEach((item) => item.classList.toggle("active", item.dataset.view === view));
+            $("#crumb-current").textContent = view;
+            if (view !== "Overview") showToast(`${view} workspace is represented by the live panels below.`);
+        }));
+        document.addEventListener("keydown", (event) => { if (event.key === "Escape") $$(".modal-backdrop").forEach((modal) => { modal.hidden = true; }); });
+    }
+
+    window.addEventListener("DOMContentLoaded", async () => {
+        refreshIcons();
+        renderAll();
+        initNetwork();
+        bindEvents();
+        if (state.token) {
+            try { await loadLiveWorkspace(); } catch (error) { showToast(error.message, "error"); }
+        }
+    });
+</script>
+</body>
+</html>

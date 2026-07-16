@@ -2,6 +2,8 @@
 
 AI Procurement and Vendor Intelligence Platform built as a Spring Boot modular monolith.
 
+Architecture details and diagrams live in [ARCHITECTURE.md](ARCHITECTURE.md).
+
 ## What is included
 
 - JWT auth with role-based method security
