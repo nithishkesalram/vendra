@@ -4,12 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#112d2d">
-    <title>Procure AI | Procurement Command Center</title>
+    <title>Vendra | Procurement Command Center</title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.min.js" defer></script>
     <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
     <style>
         :root {
@@ -337,6 +337,7 @@
         .modal-backdrop { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 18px; background: rgba(7, 27, 26, .52); backdrop-filter: blur(3px); }
         .modal-backdrop[hidden] { display: none; }
         .modal { width: min(440px, 100%); overflow: hidden; border: 1px solid rgba(255,255,255,.15); border-radius: 8px; background: var(--paper); box-shadow: var(--shadow); }
+        #order-modal .modal { width: min(640px, 100%); }
         .modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 21px 22px 16px; border-bottom: 1px solid var(--line); }
         .modal-head h2 { margin: 0; font-size: 17px; }
         .modal-head p { margin: 5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
@@ -348,6 +349,18 @@
         .field label { color: var(--ink-soft); font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
         .field input, .field select, .field textarea { width: 100%; min-height: 39px; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: 5px; color: var(--ink); background: #fff; font-size: 12px; }
         .field textarea { min-height: 76px; padding: 9px 10px; resize: vertical; }
+        .line-item-box { overflow: hidden; border: 1px solid var(--line-strong); border-radius: 6px; background: #fff; }
+        .line-item-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        .line-item-table th { padding: 9px 10px; color: var(--muted); background: #fbfcfc; border-bottom: 1px solid var(--line); font-size: 10px; font-weight: 800; letter-spacing: .04em; text-align: left; text-transform: uppercase; }
+        .line-item-table th:last-child, .line-item-table td:last-child { width: 42px; text-align: center; }
+        .line-item-table td { padding: 8px 10px; border-bottom: 1px solid #edf2f0; }
+        .line-item-table tr:last-child td { border-bottom: 0; }
+        .line-item-table input { min-height: 34px; padding: 0 8px; }
+        .line-item-remove { display: inline-grid; width: 28px; height: 28px; place-items: center; border: 0; border-radius: 5px; color: var(--muted); background: transparent; }
+        .line-item-remove:hover { color: var(--red); background: #fff1f1; }
+        .line-item-remove svg { width: 14px; height: 14px; }
+        .line-item-actions { display: flex; justify-content: flex-start; margin-top: 8px; }
+        .line-item-actions .secondary-button { min-height: 32px; gap: 5px; padding: 0 10px; }
         .form-hint { margin: -4px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
         .secondary-button { display: inline-flex; align-items: center; justify-content: center; min-height: 37px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 5px; color: var(--ink-soft); background: #fff; font-size: 11px; font-weight: 800; }
@@ -405,8 +418,8 @@
 <div class="app-shell">
     <aside class="sidebar" aria-label="Primary navigation">
         <div class="brand">
-            <div class="brand-mark">PA</div>
-            <div>Procure AI<small>Command Center</small></div>
+            <div class="brand-mark">V</div>
+            <div>Vendra<small>Command Center</small></div>
         </div>
 
         <div class="nav-label">Workspace</div>
@@ -423,7 +436,7 @@
         <button class="sidebar-action" id="open-order" type="button"><i data-lucide="plus"></i>New purchase order</button>
         <div class="sidebar-footer">
             <button class="user-button" id="user-menu" type="button" title="Connect a workspace">
-                <span class="user-avatar" id="user-avatar">PA</span>
+                <span class="user-avatar" id="user-avatar">V</span>
                 <span class="user-meta"><strong id="user-name">Preview workspace</strong><span id="user-role">No API session</span></span>
                 <i data-lucide="chevrons-up-down"></i>
             </button>
@@ -558,7 +571,7 @@
 <div class="modal-backdrop" id="auth-modal" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
         <div class="modal-head">
-            <div><h2 id="auth-title">Connect workspace</h2><p>Sign in to load live vendors, approvals, contracts, and AI responses from the Procure AI API.</p></div>
+            <div><h2 id="auth-title">Connect workspace</h2><p>Sign in to load live vendors, approvals, contracts, and AI responses from the Vendra API.</p></div>
             <button class="modal-close" type="button" data-close-modal="auth-modal" title="Close"><i data-lucide="x"></i></button>
         </div>
         <form class="modal-body" id="login-form">
@@ -579,8 +592,21 @@
         <form class="modal-body" id="order-form">
             <div class="field"><label for="order-vendor">Supplier</label><select id="order-vendor" required></select></div>
             <div class="field"><label for="order-amount">Order amount (USD)</label><input id="order-amount" type="number" min="0.01" step="0.01" value="25000" required></div>
-            <div class="field"><label for="order-items">Line items</label><textarea id="order-items" required>{"sku":"ELEC-CTRL-01","qty":20}</textarea></div>
-            <div class="field"><label for="order-approvers">Approval chain</label><input id="order-approvers" value="APPROVER_L1,APPROVER_L2"></div>
+            <div class="field">
+                <label>Line items</label>
+                <div class="line-item-box">
+                    <table class="line-item-table" aria-label="Purchase order line items">
+                        <thead>
+                        <tr><th>Product name</th><th>Quantity</th><th></th></tr>
+                        </thead>
+                        <tbody id="order-line-items"></tbody>
+                    </table>
+                </div>
+                <div class="line-item-actions">
+                    <button class="secondary-button" id="add-line-item" type="button"><i data-lucide="plus"></i>Add row</button>
+                </div>
+            </div>
+            <div class="field"><label for="order-approvers">Approval chain</label><input id="order-approvers" value="APPROVER_L1>APPROVER_L2"></div>
             <div class="modal-actions"><button class="secondary-button" type="button" data-close-modal="order-modal">Cancel</button><button class="primary-button" type="submit"><i data-lucide="file-plus-2"></i>Create draft</button></div>
         </form>
     </section>
@@ -645,8 +671,46 @@
         $("#order-vendor").innerHTML = state.vendors.map((vendor) => `<option value="${vendor.id}">${escapeHtml(vendor.name)}</option>`).join("");
     }
 
+    function addLineItemRow(item = {}) {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td><input class="line-product" type="text" placeholder="Product name" required></td>
+            <td><input class="line-quantity" type="number" min="1" step="1" placeholder="Qty" required></td>
+            <td><button class="line-item-remove" type="button" title="Remove row"><i data-lucide="trash-2"></i></button></td>`;
+        row.querySelector(".line-product").value = item.productName || item.name || "";
+        row.querySelector(".line-quantity").value = item.quantity || item.qty || "";
+        row.querySelector(".line-item-remove").addEventListener("click", () => {
+            if ($$("#order-line-items tr").length === 1) {
+                row.querySelector(".line-product").value = "";
+                row.querySelector(".line-quantity").value = "";
+                row.querySelector(".line-product").focus();
+                return;
+            }
+            row.remove();
+        });
+        $("#order-line-items").append(row);
+        refreshIcons();
+    }
+
+    function ensureLineItems() {
+        if (!$("#order-line-items").children.length) {
+            addLineItemRow({ productName: "Industrial control unit", quantity: 20 });
+        }
+    }
+
+    function collectLineItems() {
+        const rows = $$("#order-line-items tr");
+        const items = rows.map((row) => ({
+            productName: row.querySelector(".line-product").value.trim(),
+            quantity: Number(row.querySelector(".line-quantity").value)
+        }));
+        if (items.some((item) => !item.productName || !Number.isInteger(item.quantity) || item.quantity < 1)) {
+            throw new Error("Enter a product name and a whole-number quantity for every line item.");
+        }
+        return items;
+    }
+
     function complianceLabel(status) { return String(status || "PENDING_REVIEW").replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase()); }
-    function initials(name) { return String(name || "PA").split(" ").slice(0, 2).map((part) => part[0]).join("").toUpperCase(); }
+    function initials(name) { return String(name || "Vendra").split(" ").slice(0, 2).map((part) => part[0]).join("").toUpperCase(); }
     function averageRating() { return state.vendors.length ? state.vendors.reduce((total, vendor) => total + Number(vendor.rating || 0), 0) / state.vendors.length : 0; }
     function averageRisk() { return state.vendors.length ? state.vendors.reduce((total, vendor) => total + Number(vendor.riskScore || 0), 0) / state.vendors.length : 0; }
 
@@ -715,9 +779,9 @@
         $("#state-dot").classList.toggle("preview", !connected);
         $("#workspace-state-text").textContent = connected ? "Live workspace" : "Preview data";
         $("#analyst-mode").textContent = connected ? "Live API mode" : "Preview mode";
-        $("#user-name").textContent = connected ? state.user.fullName : "Preview workspace";
+        $("#user-name").textContent = connected ? (state.user.fullName || "Connected workspace") : "Preview workspace";
         $("#user-role").textContent = connected ? (state.user.roles || ["CONNECTED"])[0].replaceAll("_", " ") : "No API session";
-        $("#user-avatar").textContent = connected ? initials(state.user.fullName) : "PA";
+        $("#user-avatar").textContent = connected ? initials(state.user.fullName || "Connected workspace") : "V";
         refreshIcons();
     }
 
@@ -725,6 +789,7 @@
 
     function openModal(id) {
         if (id === "order-modal" && !state.token) { openModal("auth-modal"); showToast("Connect your workspace before creating a purchase order.", "error"); return; }
+        if (id === "order-modal") ensureLineItems();
         $("#" + id).hidden = false;
         window.setTimeout(() => $("#" + id).querySelector("input, select, textarea")?.focus(), 20);
     }
@@ -759,12 +824,12 @@
             if (!result.ok) throw new Error("We could not verify those credentials.");
             const session = await result.json();
             state.token = session.accessToken;
-            state.user = { fullName: session.fullName, roles: session.roles || [] };
+            state.user = { fullName: session.name, roles: session.roles || [] };
             sessionStorage.setItem("procureai.accessToken", state.token);
             sessionStorage.setItem("procureai.user", JSON.stringify(state.user));
             await loadLiveWorkspace();
             closeModal("auth-modal");
-            showToast(`Connected as ${session.fullName}. Live workspace loaded.`);
+            showToast(`Connected as ${session.name}. Live workspace loaded.`);
         } catch (error) {
             showToast(error.message || "Unable to connect to the workspace.", "error");
         } finally {
@@ -777,12 +842,18 @@
     async function createOrder(event) {
         event.preventDefault();
         const submit = event.submitter;
-        const itemsJson = $("#order-items").value.trim();
-        try { JSON.parse(itemsJson); } catch (_) { showToast("Line items must be valid JSON.", "error"); return; }
+        let lineItems;
+        try {
+            lineItems = collectLineItems();
+        } catch (error) {
+            showToast(error.message, "error");
+            return;
+        }
         submit.disabled = true;
         submit.textContent = "Creating...";
         try {
-            const order = await api("/purchase-orders", { method: "POST", body: JSON.stringify({ vendorId: Number($("#order-vendor").value), amount: Number($("#order-amount").value), itemsJson, approverChain: $("#order-approvers").value.trim() || null }) });
+            const approverChain = $("#order-approvers").value.trim().replace(/\s*,\s*/g, ">") || null;
+            const order = await api("/purchase-orders", { method: "POST", body: JSON.stringify({ vendorId: Number($("#order-vendor").value), amount: Number($("#order-amount").value), lineItems, approverChain }) });
             state.orders.unshift(order);
             renderAll();
             closeModal("order-modal");
@@ -912,6 +983,10 @@
         $$(".modal-backdrop").forEach((modal) => modal.addEventListener("click", (event) => { if (event.target === modal) closeModal(modal.id); }));
         $("#login-form").addEventListener("submit", login);
         $("#order-form").addEventListener("submit", createOrder);
+        $("#add-line-item").addEventListener("click", () => {
+            addLineItemRow();
+            $("#order-line-items tr:last-child .line-product").focus();
+        });
         $("#analyst-form").addEventListener("submit", askAnalyst);
         $("#suggest-question").addEventListener("click", () => { $("#analyst-input").value = "Which supplier should I review before the next award decision?"; $("#analyst-input").focus(); });
         $("#refresh-vendors").addEventListener("click", async () => {

@@ -72,10 +72,21 @@ public class McpToolRegistry {
                 )),
                 tool("create_purchase_order", "Draft a purchase order. RBAC is enforced by PurchaseOrderService.", Map.of(
                         "type", "object",
-                        "required", List.of("vendorId", "amount", "itemsJson"),
+                        "required", List.of("vendorId", "amount", "lineItems"),
                         "properties", Map.of(
                                 "vendorId", Map.of("type", "integer"),
                                 "amount", Map.of("type", "number"),
+                                "lineItems", Map.of(
+                                        "type", "array",
+                                        "items", Map.of(
+                                                "type", "object",
+                                                "required", List.of("productName", "quantity"),
+                                                "properties", Map.of(
+                                                        "productName", Map.of("type", "string"),
+                                                        "quantity", Map.of("type", "integer")
+                                                )
+                                        )
+                                ),
                                 "itemsJson", Map.of("type", "string"),
                                 "approverChain", Map.of("type", "string")
                         )

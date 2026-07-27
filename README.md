@@ -1,6 +1,6 @@
-# Procure AI
+# Vendra
 
-AI Procurement and Vendor Intelligence Platform built as a Spring Boot modular monolith.
+Vendra is an AI Procurement and Vendor Intelligence Platform built as a Spring Boot modular monolith.
 
 Architecture details and diagrams live in [ARCHITECTURE.md](ARCHITECTURE.md).
 

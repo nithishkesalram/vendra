@@ -14,8 +14,8 @@
     <groupId>com.procureai</groupId>
     <artifactId>procure-ai</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>procure-ai</name>
-    <description>AI Procurement and Vendor Intelligence Platform</description>
+    <name>Vendra</name>
+    <description>Vendra AI Procurement and Vendor Intelligence Platform</description>
 
     <properties>
         <java.version>21</java.version>

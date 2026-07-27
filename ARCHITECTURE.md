@@ -1,6 +1,6 @@
-# Procure AI Architecture
+# Vendra Architecture
 
-Procure AI is implemented as a Spring Boot modular monolith. The application keeps modules in one deployable unit for simple local development and portfolio demos, while keeping package boundaries clear enough to split into services later.
+Vendra is implemented as a Spring Boot modular monolith. The application keeps modules in one deployable unit for simple local development and portfolio demos, while keeping package boundaries clear enough to split into services later.
 
 ## System Context
 
@@ -28,7 +28,7 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-    subgraph App["procure-ai Spring Boot application"]
+    subgraph App["Vendra Spring Boot application"]
         Controllers["REST controllers"]
         SecurityLayer["Security filter + method security"]
         Services["Domain services"]

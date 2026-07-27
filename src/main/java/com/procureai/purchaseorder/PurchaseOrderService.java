@@ -1,5 +1,7 @@
 package com.procureai.purchaseorder;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.procureai.auth.Role;
 import com.procureai.audit.AuditLogged;
 import com.procureai.common.dto.PageResponse;
@@ -33,15 +35,18 @@ public class PurchaseOrderService {
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final VendorService vendorService;
     private final ProcurementEventPublisher eventPublisher;
+    private final ObjectMapper objectMapper;
 
     public PurchaseOrderService(
             PurchaseOrderRepository purchaseOrderRepository,
             VendorService vendorService,
-            ProcurementEventPublisher eventPublisher
+            ProcurementEventPublisher eventPublisher,
+            ObjectMapper objectMapper
     ) {
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.vendorService = vendorService;
         this.eventPublisher = eventPublisher;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
@@ -52,7 +57,7 @@ public class PurchaseOrderService {
         PurchaseOrder order = new PurchaseOrder();
         order.setVendor(vendor);
         order.setAmount(request.amount());
-        order.setItemsJson(request.itemsJson());
+        order.setItemsJson(toItemsJson(request));
         order.setApproverChain(normalizeApproverChain(request.approverChain()));
         order.setCreatedBy(SecurityUtils.currentActor());
         PurchaseOrder saved = purchaseOrderRepository.save(order);
@@ -178,6 +183,20 @@ public class PurchaseOrderService {
             Role.valueOf(roleName.trim());
         }
         return approverChain;
+    }
+
+    private String toItemsJson(PurchaseOrderRequest request) {
+        if (request.lineItems() != null && !request.lineItems().isEmpty()) {
+            try {
+                return objectMapper.writeValueAsString(request.lineItems());
+            } catch (JsonProcessingException exception) {
+                throw new IllegalArgumentException("Line items could not be converted to JSON", exception);
+            }
+        }
+        if (request.itemsJson() != null && !request.itemsJson().isBlank()) {
+            return request.itemsJson();
+        }
+        throw new IllegalArgumentException("At least one line item is required");
     }
 
     private PurchaseOrderResponse toResponse(PurchaseOrder order) {

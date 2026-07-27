@@ -60,7 +60,7 @@ public class ChatService {
         }
         if (normalized.contains("purchase order") || normalized.contains(" po ")) {
             return new ChatResponse(
-                    "I can help draft a purchase order when you provide vendorId, amount, and itemsJson. The create_purchase_order tool still enforces RBAC.",
+                    "I can help draft a purchase order when you provide vendorId, amount, and lineItems. The backend converts lineItems to the stored JSON format and the create_purchase_order tool still enforces RBAC.",
                     List.of(new ToolCallRecord("create_purchase_order", Map.of())),
                     List.of()
             );
