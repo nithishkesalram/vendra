@@ -40,4 +40,26 @@ public class TextChunker {
         }
         return chunks;
     }
+
+    public List<String> chunkSmart(String text) {
+        if (text == null || text.isBlank()) {
+            return List.of();
+        }
+        // Split by paragraph breaks first
+        String[] paragraphs = text.split("\n\\s*\n");
+        List<String> chunks = new ArrayList<>();
+
+        for (String paragraph : paragraphs) {
+            String trimmed = paragraph.trim();
+            if (trimmed.isEmpty()) continue;
+
+            if (trimmed.split("\\s+").length <= DEFAULT_CHUNK_WORDS) {
+                chunks.add(trimmed);
+            } else {
+                chunks.addAll(chunk(trimmed, DEFAULT_CHUNK_WORDS, DEFAULT_OVERLAP_WORDS));
+            }
+        }
+
+        return chunks.isEmpty() ? chunk(text) : chunks;
+    }
 }

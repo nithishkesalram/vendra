@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.procureai.ai.rag.RetrievalService;
+import com.procureai.ai.rag.RetrievedChunk;
+
 @RestController
 @RequestMapping("/contracts")
 @PreAuthorize("hasAnyRole('ADMIN','VENDOR_MANAGER','PROCUREMENT_OFFICER','APPROVER_L1','APPROVER_L2')")
@@ -24,10 +27,16 @@ public class ContractController {
 
     private final ContractService contractService;
     private final ContractRiskService contractRiskService;
+    private final RetrievalService retrievalService;
 
-    public ContractController(ContractService contractService, ContractRiskService contractRiskService) {
+    public ContractController(
+            ContractService contractService,
+            ContractRiskService contractRiskService,
+            RetrievalService retrievalService
+    ) {
         this.contractService = contractService;
         this.contractRiskService = contractRiskService;
+        this.retrievalService = retrievalService;
     }
 
     @PostMapping
@@ -53,5 +62,15 @@ public class ContractController {
     @PostMapping("/{id}/risk-analysis")
     public ContractRiskResponse analyze(@PathVariable Long id) {
         return contractRiskService.analyze(id);
+    }
+
+    @GetMapping("/rag/search")
+    public List<RetrievedChunk> search(
+            @RequestParam String query,
+            @RequestParam(required = false) Long vendorId,
+            @RequestParam(required = false) Long contractId,
+            @RequestParam(defaultValue = "5") int topK
+    ) {
+        return retrievalService.retrieveRelevantChunks(query, vendorId, contractId, topK);
     }
 }

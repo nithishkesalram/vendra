@@ -4,3 +4,9 @@ target/
 *.iml
 .DS_Store
 *.log
+node_modules/
+dist/
+.vite/
+frontend/node_modules/
+frontend/dist/
+

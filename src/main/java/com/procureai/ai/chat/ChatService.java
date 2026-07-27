@@ -29,24 +29,38 @@ public class ChatService {
         rateLimiter.assertAllowed(SecurityUtils.currentActor());
         String normalized = request.message().toLowerCase(Locale.ROOT);
         if (mentionsContracts(normalized)) {
-            List<RetrievedChunk> chunks = retrievalService.retrieveRelevantChunks(request.message(), request.vendorId(), 3);
+            List<RetrievedChunk> chunks = retrievalService.retrieveRelevantChunks(request.message(), request.vendorId(), 4);
             if (chunks.isEmpty()) {
                 return new ChatResponse(
-                        "I could not find matching contract or policy context yet. Upload a contract document first, then ask again.",
+                        "I could not find matching contract or policy context for your query. Upload a contract document in the Contracts workspace and try again.",
                         List.of(),
                         List.of()
                 );
             }
+
+            RetrievedChunk topChunk = chunks.get(0);
+            double topScorePct = Math.round(topChunk.score() * 100.0);
+            String confidence = topChunk.confidence();
+
+            String synthesizedReply = String.format(
+                    "Found %d relevant contract clause(s) with %s confidence (%d%% match). Key context: \"%s\"",
+                    chunks.size(),
+                    confidence,
+                    (int) topScorePct,
+                    excerpt(topChunk.content())
+            );
+
             List<Citation> citations = chunks.stream()
                     .map(chunk -> new Citation(
                             chunk.chunkId(),
                             chunk.sourceDocId(),
-                            chunk.sourceType().name(),
+                            "%s [%s]".formatted(chunk.sourceType().name(), chunk.confidence()),
                             excerpt(chunk.content())
                     ))
                     .toList();
+
             return new ChatResponse(
-                    "I found relevant contract context. Review the cited chunks before acting on the recommendation.",
+                    synthesizedReply,
                     List.of(),
                     citations
             );

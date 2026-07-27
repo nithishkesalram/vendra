@@ -51,18 +51,29 @@ public class ContractRiskService {
     private List<RiskFinding> findRisks(DocumentChunk chunk) {
         String content = chunk.getContent().toLowerCase(Locale.ROOT);
         List<RiskFinding> findings = new ArrayList<>();
-        if (content.contains("unlimited liability") || content.contains("indemnify")) {
-            findings.add(finding("liability", "HIGH", "Potentially broad liability or indemnity language.", chunk));
+
+        if (content.contains("unlimited liability") || content.contains("indemnify") || content.contains("hold harmless")) {
+            findings.add(finding("liability", "HIGH", "Broad liability, indemnity, or uncapped indemnification clause.", chunk));
         }
-        if (content.contains("terminate for convenience") || content.contains("termination without cause")) {
-            findings.add(finding("termination", "MEDIUM", "Termination rights may allow abrupt supplier exit or buyer exposure.", chunk));
+        if (content.contains("intellectual property") || content.contains("work for hire") || content.contains("assignment of ip")) {
+            findings.add(finding("ip_ownership", "HIGH", "Intellectual property transfer or ownership restriction clause.", chunk));
         }
-        if (content.contains("automatic renewal") || content.contains("auto-renew")) {
-            findings.add(finding("renewal", "MEDIUM", "Automatic renewal language needs explicit calendar controls.", chunk));
+        if (content.contains("data breach") || content.contains("gdpr") || content.contains("personal data")) {
+            findings.add(finding("data_privacy", "HIGH", "Data privacy or security compliance obligation identified.", chunk));
         }
-        if (content.contains("payment due within 7") || content.contains("late payment penalty")) {
-            findings.add(finding("payment_terms", "LOW", "Payment timing or penalty language may affect working capital.", chunk));
+        if (content.contains("terminate for convenience") || content.contains("termination without cause") || content.contains("exclusive supplier")) {
+            findings.add(finding("termination", "MEDIUM", "Termination rights or exclusivity clause may expose buyer.", chunk));
         }
+        if (content.contains("automatic renewal") || content.contains("auto-renew") || content.contains("price escalation")) {
+            findings.add(finding("renewal", "MEDIUM", "Automatic renewal or price escalation clause requires tracking.", chunk));
+        }
+        if (content.contains("sla") || content.contains("uptime") || content.contains("service level")) {
+            findings.add(finding("sla", "MEDIUM", "Service level agreement (SLA) penalty or performance metric clause.", chunk));
+        }
+        if (content.contains("payment due within 7") || content.contains("late payment penalty") || content.contains("interest rate")) {
+            findings.add(finding("payment_terms", "LOW", "Strict payment schedule or late payment interest penalty clause.", chunk));
+        }
+
         return findings;
     }
 
