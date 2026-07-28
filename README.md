@@ -31,6 +31,17 @@ Open:
 - Swagger UI: http://localhost:8080/swagger-ui.html
 - H2 console: http://localhost:8080/h2-console
 
+## OpenAI RAG configuration
+
+Vendra loads OpenAI settings from a local `.env` file. Keep this file out of git.
+
+```properties
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-4o-mini
+```
+
+When `OPENAI_API_KEY` is present, `/ai/chat` retrieves relevant contract chunks from the local RAG store and sends the grounded context to OpenAI. Without a key, the app falls back to the local heuristic LLM client.
+
 ## Demo users
 
 All seeded users use password `password`.

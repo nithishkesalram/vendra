@@ -4,6 +4,7 @@ import com.procureai.ai.chat.dto.ChatRequest;
 import com.procureai.ai.chat.dto.ChatResponse;
 import com.procureai.ai.chat.dto.Citation;
 import com.procureai.ai.chat.dto.ToolCallRecord;
+import com.procureai.ai.llm.LlmClient;
 import com.procureai.ai.rag.RetrievalService;
 import com.procureai.ai.rag.RetrievedChunk;
 import com.procureai.common.security.SecurityUtils;
@@ -18,10 +19,12 @@ public class ChatService {
 
     private final RetrievalService retrievalService;
     private final InMemoryRateLimiter rateLimiter;
+    private final LlmClient llmClient;
 
-    public ChatService(RetrievalService retrievalService, InMemoryRateLimiter rateLimiter) {
+    public ChatService(RetrievalService retrievalService, InMemoryRateLimiter rateLimiter, LlmClient llmClient) {
         this.retrievalService = retrievalService;
         this.rateLimiter = rateLimiter;
+        this.llmClient = llmClient;
     }
 
     @Transactional(readOnly = true)
@@ -38,16 +41,9 @@ public class ChatService {
                 );
             }
 
-            RetrievedChunk topChunk = chunks.get(0);
-            double topScorePct = Math.round(topChunk.score() * 100.0);
-            String confidence = topChunk.confidence();
-
-            String synthesizedReply = String.format(
-                    "Found %d relevant contract clause(s) with %s confidence (%d%% match). Key context: \"%s\"",
-                    chunks.size(),
-                    confidence,
-                    (int) topScorePct,
-                    excerpt(topChunk.content())
+            String synthesizedReply = llmClient.complete(
+                    ragSystemPrompt(),
+                    ragUserPrompt(request.message(), chunks)
             );
 
             List<Citation> citations = chunks.stream()
@@ -93,6 +89,32 @@ public class ChatService {
                 || message.contains("risk")
                 || message.contains("liability")
                 || message.contains("termination");
+    }
+
+    private String ragSystemPrompt() {
+        return """
+                You are Vendra's procurement intelligence analyst.
+                Answer only from the retrieved procurement context.
+                If the retrieved context is insufficient, say what is missing.
+                Keep the answer concise, practical, and grounded in the cited clauses.
+                """;
+    }
+
+    private String ragUserPrompt(String question, List<RetrievedChunk> chunks) {
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("User question:\n").append(question).append("\n\nRetrieved context:\n");
+        for (int index = 0; index < chunks.size(); index++) {
+            RetrievedChunk chunk = chunks.get(index);
+            prompt.append("[").append(index + 1).append("] ")
+                    .append(chunk.sourceType()).append(" document ")
+                    .append(chunk.sourceDocId())
+                    .append(", confidence ")
+                    .append(chunk.confidence())
+                    .append(":\n")
+                    .append(chunk.content())
+                    .append("\n\n");
+        }
+        return prompt.toString();
     }
 
     private String excerpt(String content) {

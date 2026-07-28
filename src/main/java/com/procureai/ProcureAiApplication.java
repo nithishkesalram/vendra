@@ -1,5 +1,6 @@
 package com.procureai;
 
+import com.procureai.ai.llm.OpenAiProperties;
 import com.procureai.auth.JwtProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -10,7 +11,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableCaching
 @EnableScheduling
 @SpringBootApplication
-@EnableConfigurationProperties(JwtProperties.class)
+@EnableConfigurationProperties({JwtProperties.class, OpenAiProperties.class})
 public class ProcureAiApplication {
 
     public static void main(String[] args) {

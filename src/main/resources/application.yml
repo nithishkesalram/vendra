@@ -2,6 +2,8 @@ server:
   port: 8080
 
 spring:
+  config:
+    import: optional:file:.env[.properties]
   application:
     name: vendra
   datasource:
@@ -56,6 +58,11 @@ procureai:
     refresh-token-days: 7
   ai:
     chat-rate-limit-per-minute: 20
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      model: ${OPENAI_MODEL:gpt-4o-mini}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+      timeout-seconds: ${OPENAI_TIMEOUT_SECONDS:30}
   kafka:
     enabled: false
     topics:

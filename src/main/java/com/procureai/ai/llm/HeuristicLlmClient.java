@@ -1,8 +1,10 @@
 package com.procureai.ai.llm;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnMissingBean(LlmClient.class)
 public class HeuristicLlmClient implements LlmClient {
 
     @Override
